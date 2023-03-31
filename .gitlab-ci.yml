@@ -1,0 +1,73 @@
+stages:
+  - build_test
+  - sonar_scan  
+#   - push_dev
+#  - deploy_dev
+
+build_dev:
+  stage: build_test
+  tags:
+    - local
+  script:
+    - touch application-local.properties
+    - echo "$DEV_ENV_VAR" > src/main/resources/application-local.properties
+    # - cat .env
+    - docker build -t java-dev-api:latest .
+#    - docker push docker.indianic.com/watu/java-dev-api:$CI_COMMIT_SHORT_SHA
+#    - docker rmi docker.indianic.com/watu/java-dev-api:$CI_COMMIT_SHORT_SHA
+
+  only:
+    - test
+sonar_scan:
+  stage: sonar_scan
+  tags:
+    - local
+  image:
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+    - .sonar/cache
+  script:
+    - mvn verify sonar:sonar -Dsonar.projectKey=java-api
+  allow_failure: true
+  only:
+    - test
+    
+# sonarqube-check:
+#   image: maven:3.6.3-jdk-11
+#   variables:
+#     SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
+#     GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+#   cache:
+#     key: "${CI_JOB_NAME}"
+#     paths:
+#       - .sonar/cache
+#   script: 
+#     - mvn verify sonar:sonar -Dsonar.projectKey=java-api
+#   allow_failure: true
+#   only:
+#     - test # or the name of your main branch
+
+
+# push_dev:
+#   stage: push_dev
+#   tags:
+#     - docker-exec
+#   script:
+#     - docker push docker.indianic.com/clivi/anguler-dev-admin:$CI_COMMIT_SHORT_SHA
+#   only:
+#     - development
+
+# deploy_dev:
+#   stage: deploy_dev
+#   tags:
+#     - kube-prod-exec
+#   script:
+#     - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" watu-deployment.yaml
+#     - kubectl apply -f watu-deployment.yaml -n frontend
+#   only:
+#     - dev

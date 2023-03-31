@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration monitorInterval="60">
+    <Properties>
+        <Property name="log-path">logs</Property>
+        <Property name="archive">${log-path}/archive</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="Console-Appender" target="SYSTEM_OUT">
+            <PatternLayout>
+                <pattern>
+                    [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n
+                </pattern>
+                >
+            </PatternLayout>
+        </Console>
+
+        <RollingFile name="RollingFile-Appender"
+                     fileName="${log-path}/people.log"
+                     filePattern="${archive}/people.log.%d{yyyy-MM-dd-hh-mm}.gz" append="true">
+            <PatternLayout pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n"/>
+            <Policies>
+                <!-- Roll the file every day (default configuration) -->
+                <TimeBasedTriggeringPolicy/>
+                <!-- Also, Roll the log if it exceeds 10 MB in size -->
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <!-- Keep the last 30 files, delete the older ones -->
+            <DefaultRolloverStrategy max="30"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Logger name="com.peopleapp">
+            <AppenderRef ref="RollingFile-Appender" level="info"/>
+        </Logger>
+        <Root level="debug">
+            <AppenderRef ref="Console-Appender" level="info"/>
+        </Root>
+    </Loggers>
+</Configuration>
